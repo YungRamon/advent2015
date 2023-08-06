@@ -3,7 +3,7 @@ open System
 open System.IO
 open System.Security.Cryptography
 open System.Text
-printf "Day(1_1,1_2,2_1,2_2,3_1,3_2,4_1,4_2,5_1,5_2): "
+printf "Day(1_1,1_2,2_1,2_2,3_1,3_2,4_1,4_2,5_1,5_2,6_1,6_2): "
 let input = Console.ReadLine()
 
 let readInput(day:int32,env:string) : string[]= File.ReadAllLines("../../../input/day"+day.ToString()+"-"+env+".txt")
@@ -133,6 +133,38 @@ let day5_2 ()=
             count <- count+1
     Console.WriteLine(count.ToString())
 
+let day6_1 ()= 
+    let input= readInput(6,"game")
+    let grid= Array2D.create 1000 1000 false
+    for i in input do
+        let split= if i.StartsWith("turn") then i.Substring(5).Split(" ") else i.Split(" ")
+        let change= split[0]
+        let x1=Convert.ToInt32(split[1].Split(",")[0]) 
+        let y1=Convert.ToInt32(split[1].Split(",")[1]) 
+        let x2=Convert.ToInt32(split[3].Split(",")[0]) 
+        let y2=Convert.ToInt32(split[3].Split(",")[1]) 
+        for x = x1 to x2 do
+            for y = y1 to y2 do
+                grid.[x,y] <- match change with | "on" -> true | "off" -> false | _ -> grid.[x,y] <> true
+    let total=grid |> Seq.cast<bool> |> Seq.fold (fun acc x ->if x then acc+1 else acc) 0
+    Console.WriteLine(total.ToString())
+
+let day6_2 ()= 
+    let input= readInput(6,"game")
+    let grid= Array2D.create 1000 1000 0
+    for i in input do
+        let split= if i.StartsWith("turn") then i.Substring(5).Split(" ") else i.Split(" ")
+        let change= split[0]
+        let x1=Convert.ToInt32(split[1].Split(",")[0]) 
+        let y1=Convert.ToInt32(split[1].Split(",")[1]) 
+        let x2=Convert.ToInt32(split[3].Split(",")[0]) 
+        let y2=Convert.ToInt32(split[3].Split(",")[1]) 
+        for x = x1 to x2 do
+            for y = y1 to y2 do
+                grid.[x,y] <- match change with | "on" -> grid[x,y]+1 | "off" -> Math.Max(0,grid[x,y]-1) | _ -> grid[x,y]+2
+    let total=grid |> Seq.cast<int> |> Seq.fold (fun acc x ->acc+x) 0
+    Console.WriteLine(total.ToString())
+
 match input with
     | "1_1" -> day1_1()
     | "1_2" -> day1_2()
@@ -144,6 +176,8 @@ match input with
     | "4_2" -> day4_2()
     | "5_1" -> day5_1()
     | "5_2" -> day5_2()
+    | "6_1" -> day6_1()
+    | "6_2" -> day6_2()
     | _ -> printfn "Wrong Input"
 
 Console.ReadKey() |> ignore
