@@ -1,7 +1,9 @@
 ﻿// For more information see https://aka.ms/fsharp-console-apps
 open System
 open System.IO
-printf "Day(1_1,1_2,2_1,2_2,3_1,3_2): "
+open System.Security.Cryptography
+open System.Text
+printf "Day(1_1,1_2,2_1,2_2,3_1,3_2,4_1,4_2): "
 let input = Console.ReadLine()
 
 let readInput(day:int32,env:string) : string[]= File.ReadAllLines("../../../input/day"+day.ToString()+"-"+env+".txt")
@@ -95,6 +97,24 @@ let day3_2 ()=
     let set= Set.ofSeq  s
     Console.WriteLine(set.Count)
 
+let day4_1 ()= 
+    let input= readInput(4,"game")[0]
+    use md5=MD5.Create()
+    let mutable i=1
+    let s()=input + i.ToString()
+    while not (((StringBuilder(), md5.ComputeHash(Encoding.ASCII.GetBytes(s()))) ||> Array.fold (fun sb b -> sb.Append(b.ToString("x2")))|> string)[0..4]="00000") do
+        i <- i+1
+    Console.WriteLine(i.ToString())
+
+let day4_2 ()= 
+    let input= readInput(4,"game")[0]
+    use md5=MD5.Create()
+    let mutable i=1
+    let s()=input + i.ToString()
+    while not (((StringBuilder(), md5.ComputeHash(Encoding.ASCII.GetBytes(s()))) ||> Array.fold (fun sb b -> sb.Append(b.ToString("x2")))|> string)[0..5]="000000") do
+        i <- i+1
+    Console.WriteLine(i.ToString())
+
 match input with
     | "1_1" -> day1_1()
     | "1_2" -> day1_2()
@@ -102,6 +122,8 @@ match input with
     | "2_2" -> day2_2()
     | "3_1" -> day3_1()
     | "3_2" -> day3_2()
+    | "4_1" -> day4_1()
+    | "4_2" -> day4_2()
     | _ -> printfn "Wrong Input"
 
 Console.ReadKey() |> ignore
