@@ -3,7 +3,7 @@ open System
 open System.IO
 open System.Security.Cryptography
 open System.Text
-printf "Day(1_1,1_2,2_1,2_2,3_1,3_2,4_1,4_2): "
+printf "Day(1_1,1_2,2_1,2_2,3_1,3_2,4_1,4_2,5_1,5_2): "
 let input = Console.ReadLine()
 
 let readInput(day:int32,env:string) : string[]= File.ReadAllLines("../../../input/day"+day.ToString()+"-"+env+".txt")
@@ -115,6 +115,24 @@ let day4_2 ()=
         i <- i+1
     Console.WriteLine(i.ToString())
 
+let day5_1 ()= 
+    let input= readInput(5,"game")
+    let rx=new RegularExpressions.Regex(@"^(?=.*([aeiou]).*([aeiou]).*([aeiou]).*)(?!.*(ab|cd|pq|xy).*).*(.)\5.*$",RegularExpressions.RegexOptions.Compiled)
+    let mutable count=0
+    for i in input do
+        if rx.IsMatch(i) then
+            count <- count+1
+    Console.WriteLine(count.ToString())
+
+let day5_2 ()= 
+    let input= readInput(5,"game")
+    let rx=new RegularExpressions.Regex(@"^(?=.*(..).*\1.*).*(.).\2.*$",RegularExpressions.RegexOptions.Compiled)
+    let mutable count=0
+    for i in input do
+        if rx.IsMatch(i) then
+            count <- count+1
+    Console.WriteLine(count.ToString())
+
 match input with
     | "1_1" -> day1_1()
     | "1_2" -> day1_2()
@@ -124,6 +142,8 @@ match input with
     | "3_2" -> day3_2()
     | "4_1" -> day4_1()
     | "4_2" -> day4_2()
+    | "5_1" -> day5_1()
+    | "5_2" -> day5_2()
     | _ -> printfn "Wrong Input"
 
 Console.ReadKey() |> ignore
