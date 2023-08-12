@@ -3,7 +3,8 @@ open System
 open System.IO
 open System.Security.Cryptography
 open System.Text
-printf "Day(1_1,1_2,2_1,2_2,3_1,3_2,4_1,4_2,5_1,5_2,6_1,6_2): "
+open System.Collections.Generic
+printf "Day(1_1,1_2,2_1,2_2,3_1,3_2,4_1,4_2,5_1,5_2,6_1,6_2,7_1,7_2): "
 let input = Console.ReadLine()
 
 let readInput(day:int32,env:string) : string[]= File.ReadAllLines("../../../input/day"+day.ToString()+"-"+env+".txt")
@@ -165,6 +166,181 @@ let day6_2 ()=
     let total=grid |> Seq.cast<int> |> Seq.fold (fun acc x ->acc+x) 0
     Console.WriteLine(total.ToString())
 
+let day7_1 ()= 
+    let input= readInput(7,"game")
+    let dic: Dictionary<string,Func<uint16>>= new Dictionary<string,Func<uint16>>()
+    for i in input do
+        let equation=i.Split(" -> ")
+        match equation[0] with
+        | _ when equation[0] |> Seq.forall Char.IsDigit ->
+            let n=Convert.ToUInt16(equation[0])
+            dic.Add(equation[1],fun ()-> n)
+        | _ when equation[0].Contains("AND") -> 
+            let first=equation[0].Split(" ")[0]
+            let second=equation[0].Split(" ")[2]
+            if first |> Seq.forall Char.IsDigit then
+                let n=Convert.ToUInt16(first)
+                dic.TryAdd(first,fun ()-> n) |> ignore
+            if second |> Seq.forall Char.IsDigit then
+                let n=Convert.ToUInt16(second)
+                dic.TryAdd(second,fun ()-> n) |> ignore
+            dic.Add(equation[1],fun ()-> 
+                let n'=dic.Item(first).Invoke() &&& dic.Item(second).Invoke()
+                dic.Remove(equation[1]) |> ignore
+                dic.Add(equation[1],fun ()-> n')
+                n'
+                )
+        | _ when equation[0].Contains("OR") -> 
+            let first=equation[0].Split(" ")[0]
+            let second=equation[0].Split(" ")[2]
+            if first |> Seq.forall Char.IsDigit then
+                let n=Convert.ToUInt16(first)
+                dic.TryAdd(first,fun ()-> n) |> ignore
+            if second |> Seq.forall Char.IsDigit then
+                let n=Convert.ToUInt16(second)
+                dic.TryAdd(second,fun ()-> n) |> ignore
+            dic.Add(equation[1],fun ()-> 
+                let n'= dic.Item(first).Invoke() ||| dic.Item(second).Invoke()
+                dic.Remove(equation[1]) |> ignore
+                dic.Add(equation[1],fun ()-> n')
+                n'
+                )
+        | _ when equation[0].Contains("LSHIFT") -> 
+            let first=equation[0].Split(" ")[0]
+            let second=Convert.ToInt32(equation[0].Split(" ")[2])
+            if first |> Seq.forall Char.IsDigit then
+                let n=Convert.ToUInt16(first)
+                dic.TryAdd(first,fun ()-> n) |> ignore
+            dic.Add(equation[1],fun ()-> 
+                let n' =dic.Item(first).Invoke() <<< second 
+                dic.Remove(equation[1]) |> ignore
+                dic.Add(equation[1],fun ()-> n')
+                n'
+                )
+        | _ when equation[0].Contains("RSHIFT") -> 
+            let first=equation[0].Split(" ")[0]
+            let second=Convert.ToInt32(equation[0].Split(" ")[2])
+            if first |> Seq.forall Char.IsDigit then
+                let n=Convert.ToUInt16(first)
+                dic.TryAdd(first,fun ()-> n) |> ignore
+            dic.Add(equation[1],fun ()-> 
+                let n'= dic.Item(first).Invoke() >>> second 
+                dic.Remove(equation[1]) |> ignore
+                dic.Add(equation[1],fun ()-> n')
+                n'
+                )
+        | _ when equation[0].Contains("NOT") -> 
+            let value=equation[0].Split(" ")[1]
+            if value |> Seq.forall Char.IsDigit then
+                let n=Convert.ToUInt16(value)
+                dic.TryAdd(value,fun ()-> n) |> ignore
+            dic.Add(equation[1],fun ()-> 
+                let n' = ~~~ dic.Item(value).Invoke() 
+                dic.Remove(equation[1]) |> ignore
+                dic.Add(equation[1],fun ()-> n')
+                n'
+                )
+        | _ -> dic.Add(equation[1],fun ()-> 
+            let n'= dic.Item(equation[0]).Invoke()
+            dic.Remove(equation[1]) |> ignore
+            dic.Add(equation[1],fun ()-> n')
+            n'
+            )
+    
+    Console.WriteLine(dic.Item("a").Invoke())
+
+let day7_2 ()= 
+    let input= readInput(7,"game")
+    let generateDictionary(input:string array)=
+        let dic: Dictionary<string,Func<uint16>>= new Dictionary<string,Func<uint16>>()
+        for i in input do
+            let equation=i.Split(" -> ")
+            match equation[0] with
+            | _ when equation[0] |> Seq.forall Char.IsDigit ->
+                let n=Convert.ToUInt16(equation[0])
+                dic.Add(equation[1],fun ()-> n)
+            | _ when equation[0].Contains("AND") -> 
+                let first=equation[0].Split(" ")[0]
+                let second=equation[0].Split(" ")[2]
+                if first |> Seq.forall Char.IsDigit then
+                    let n=Convert.ToUInt16(first)
+                    dic.TryAdd(first,fun ()-> n) |> ignore
+                if second |> Seq.forall Char.IsDigit then
+                    let n=Convert.ToUInt16(second)
+                    dic.TryAdd(second,fun ()-> n) |> ignore
+                dic.Add(equation[1],fun ()-> 
+                    let n'=dic.Item(first).Invoke() &&& dic.Item(second).Invoke()
+                    dic.Remove(equation[1]) |> ignore
+                    dic.Add(equation[1],fun ()-> n')
+                    n'
+                    )
+            | _ when equation[0].Contains("OR") -> 
+                let first=equation[0].Split(" ")[0]
+                let second=equation[0].Split(" ")[2]
+                if first |> Seq.forall Char.IsDigit then
+                    let n=Convert.ToUInt16(first)
+                    dic.TryAdd(first,fun ()-> n) |> ignore
+                if second |> Seq.forall Char.IsDigit then
+                    let n=Convert.ToUInt16(second)
+                    dic.TryAdd(second,fun ()-> n) |> ignore
+                dic.Add(equation[1],fun ()-> 
+                    let n'= dic.Item(first).Invoke() ||| dic.Item(second).Invoke()
+                    dic.Remove(equation[1]) |> ignore
+                    dic.Add(equation[1],fun ()-> n')
+                    n'
+                    )
+            | _ when equation[0].Contains("LSHIFT") -> 
+                let first=equation[0].Split(" ")[0]
+                let second=Convert.ToInt32(equation[0].Split(" ")[2])
+                if first |> Seq.forall Char.IsDigit then
+                    let n=Convert.ToUInt16(first)
+                    dic.TryAdd(first,fun ()-> n) |> ignore
+                dic.Add(equation[1],fun ()-> 
+                    let n' =dic.Item(first).Invoke() <<< second 
+                    dic.Remove(equation[1]) |> ignore
+                    dic.Add(equation[1],fun ()-> n')
+                    n'
+                    )
+            | _ when equation[0].Contains("RSHIFT") -> 
+                let first=equation[0].Split(" ")[0]
+                let second=Convert.ToInt32(equation[0].Split(" ")[2])
+                if first |> Seq.forall Char.IsDigit then
+                    let n=Convert.ToUInt16(first)
+                    dic.TryAdd(first,fun ()-> n) |> ignore
+                dic.Add(equation[1],fun ()-> 
+                    let n'= dic.Item(first).Invoke() >>> second 
+                    dic.Remove(equation[1]) |> ignore
+                    dic.Add(equation[1],fun ()-> n')
+                    n'
+                    )
+            | _ when equation[0].Contains("NOT") -> 
+                let value=equation[0].Split(" ")[1]
+                if value |> Seq.forall Char.IsDigit then
+                    let n=Convert.ToUInt16(value)
+                    dic.TryAdd(value,fun ()-> n) |> ignore
+                dic.Add(equation[1],fun ()-> 
+                    let n' = ~~~ dic.Item(value).Invoke() 
+                    dic.Remove(equation[1]) |> ignore
+                    dic.Add(equation[1],fun ()-> n')
+                    n'
+                    )
+            | _ -> dic.Add(equation[1],fun ()-> 
+                let n'= dic.Item(equation[0]).Invoke()
+                dic.Remove(equation[1]) |> ignore
+                dic.Add(equation[1],fun ()-> n')
+                n'
+                )
+        dic
+    let dic=generateDictionary(input)
+    let b=dic.Item("a").Invoke()
+    let bString=b.ToString() + " -> b"
+    let ib= Array.FindIndex (input,fun e-> e.EndsWith(" b"))
+    input.SetValue(bString,ib)
+    let dic'=generateDictionary(input)
+    dic'.Remove("b") |> ignore
+    dic'.Add("b", fun() -> b )
+    Console.WriteLine(dic'.Item("a").Invoke())
+
 match input with
     | "1_1" -> day1_1()
     | "1_2" -> day1_2()
@@ -178,6 +354,8 @@ match input with
     | "5_2" -> day5_2()
     | "6_1" -> day6_1()
     | "6_2" -> day6_2()
+    | "7_1" -> day7_1()
+    | "7_2" -> day7_2()
     | _ -> printfn "Wrong Input"
 
 Console.ReadKey() |> ignore
