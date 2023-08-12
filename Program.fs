@@ -337,8 +337,6 @@ let day7_2 ()=
     let ib= Array.FindIndex (input,fun e-> e.EndsWith(" b"))
     input.SetValue(bString,ib)
     let dic'=generateDictionary(input)
-    dic'.Remove("b") |> ignore
-    dic'.Add("b", fun() -> b )
     Console.WriteLine(dic'.Item("a").Invoke())
 
 match input with
