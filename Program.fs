@@ -4,7 +4,7 @@ open System.IO
 open System.Security.Cryptography
 open System.Text
 open System.Collections.Generic
-printf "Day(1_1,1_2,2_1,2_2,3_1,3_2,4_1,4_2,5_1,5_2,6_1,6_2,7_1,7_2): "
+printf "Day(1_1,1_2,2_1,2_2,3_1,3_2,4_1,4_2,5_1,5_2,6_1,6_2,7_1,7_2,8_1,8_2): "
 let input = Console.ReadLine()
 
 let readInput(day:int32,env:string) : string[]= File.ReadAllLines("../../../input/day"+day.ToString()+"-"+env+".txt")
@@ -339,6 +339,22 @@ let day7_2 ()=
     let dic'=generateDictionary(input)
     Console.WriteLine(dic'.Item("a").Invoke())
 
+let day8_1 ()= 
+    let input= readInput(8,"game")
+    let mutable total= 0
+    for i in input do
+        let i2=RegularExpressions.Regex.Replace(i.Substring(1,i.Length-2),"(\\\\\"|\\\\x[0-9a-f][0-9a-f]|\\\\\\\\)","a")
+        total <- total + i.Length - i2.Length
+    Console.WriteLine(total.ToString())
+
+let day8_2 ()= 
+    let input= readInput(8,"game")
+    let mutable total= 0
+    for i in input do
+        let i2=RegularExpressions.Regex.Replace(i,"(\"|\\\\)","aa")
+        total <- total + i2.Length + 2 - i.Length
+    Console.WriteLine(total.ToString())
+
 match input with
     | "1_1" -> day1_1()
     | "1_2" -> day1_2()
@@ -354,6 +370,8 @@ match input with
     | "6_2" -> day6_2()
     | "7_1" -> day7_1()
     | "7_2" -> day7_2()
+    | "8_1" -> day8_1()
+    | "8_2" -> day8_2()
     | _ -> printfn "Wrong Input"
 
 Console.ReadKey() |> ignore
