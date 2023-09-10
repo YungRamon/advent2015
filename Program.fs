@@ -4,7 +4,7 @@ open System.IO
 open System.Security.Cryptography
 open System.Text
 open System.Collections.Generic
-printf "Day(1_1,1_2,2_1,2_2,3_1,3_2,4_1,4_2,5_1,5_2,6_1,6_2,7_1,7_2,8_1,8_2,9_1,9_2,10_1,10_2): "
+printf "Day(1_1,1_2,2_1,2_2,3_1,3_2,4_1,4_2,5_1,5_2,6_1,6_2,7_1,7_2,8_1,8_2,9_1,9_2,10_1,10_2,11_1,11_2): "
 let input = Console.ReadLine()
 
 let readInput(day:int32,env:string) : string[]= File.ReadAllLines("../../../input/day"+day.ToString()+"-"+env+".txt")
@@ -448,6 +448,28 @@ let day10 (iterations)=
         i <- i - 1
     Console.WriteLine line.Length
 
+let day11(iterations)=
+    let input= readInput(11,"game")[0]
+    let mutable line = input
+    let rxZ= new RegularExpressions.Regex(@"z+$",RegularExpressions.RegexOptions.Compiled)
+    //Three Letter Sequence
+    let rxTLS= new RegularExpressions.Regex(@"(abc|bcd|cde|def|efg|fgh|ghi|hij|ijk|jkl|klm|lmn|mno|nop|opq|pqr|qrs|rst|stu|tuv|uvw|vwx|wxy|xyz)",RegularExpressions.RegexOptions.Compiled)
+    //Not i o l
+    let rxNotIOL = new RegularExpressions.Regex(@"^[^iol]+$",RegularExpressions.RegexOptions.Compiled)
+    //Two pairs
+    let rxPair = new RegularExpressions.Regex(@"^.*(([a-z])\2).*(?!\1)(([a-z])\4).*$",RegularExpressions.RegexOptions.Compiled)
+    let addOneToPass pass= 
+        let length= rxZ.Match(pass).Value.Length + 1
+        let ch=char ((int pass[pass.Length - length]) + 1)
+        pass.Substring(0 , pass.Length - length) + ch.ToString() + String.replicate (length-1) "a"
+    let mutable i = iterations
+    while i > 0 do
+        i <- i-1
+        line <- addOneToPass line
+        while not(rxTLS.IsMatch(line) && rxNotIOL.IsMatch(line) && rxPair.IsMatch(line)) do
+            line <- addOneToPass line
+    Console.WriteLine line
+
 match input with
     | "1_1" -> day1_1()
     | "1_2" -> day1_2()
@@ -469,6 +491,8 @@ match input with
     | "9_2" -> day9_2()
     | "10_1" -> day10(40)
     | "10_2" -> day10(50)
+    | "11_1" -> day11(1)
+    | "11_2" -> day11(2)
     | _ -> printfn "Wrong Input"
 
 Console.ReadKey() |> ignore
