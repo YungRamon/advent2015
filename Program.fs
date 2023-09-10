@@ -4,7 +4,7 @@ open System.IO
 open System.Security.Cryptography
 open System.Text
 open System.Collections.Generic
-printf "Day(1_1,1_2,2_1,2_2,3_1,3_2,4_1,4_2,5_1,5_2,6_1,6_2,7_1,7_2,8_1,8_2): "
+printf "Day(1_1,1_2,2_1,2_2,3_1,3_2,4_1,4_2,5_1,5_2,6_1,6_2,7_1,7_2,8_1,8_2,9_1,9_2): "
 let input = Console.ReadLine()
 
 let readInput(day:int32,env:string) : string[]= File.ReadAllLines("../../../input/day"+day.ToString()+"-"+env+".txt")
@@ -355,6 +355,84 @@ let day8_2 ()=
         total <- total + i2.Length + 2 - i.Length
     Console.WriteLine(total.ToString())
 
+//Struct Route to define each route for Santa
+type RouteFromTo =
+    struct
+        val From: String
+        val To: String
+
+        val distance: int32
+        new(origin: string, termination: string, distance: int32) = { From = origin ; To = termination ; distance = distance}
+    end
+type FullRoute =
+    struct
+        val Cities: list<String>
+        val TotalDistance: int
+        new(origin: String, destination: String, distance: int32) = { Cities=[ origin; destination ] ; TotalDistance = distance}
+        new(cities:list<String>, distance: int32) = { Cities=cities ; TotalDistance = distance}
+    end
+let day9_1 ()= 
+    let input= readInput(9,"game")
+    let routes= seq {for line in input -> new RouteFromTo(line.Split(" ")[0],line.Split(" ")[2],line.Split(" ")[4] |> int)}
+    let cityExist cityList city = List.exists (fun x -> x = city) cityList
+    let printRoute (cityList: string list) = cityList |> FSharp.Core.String.concat "-"
+    let mutable count=1;
+    let mutable lines=input.Length
+    while lines>0 do
+        lines <- lines - count
+        count <- count + 1
+    count <- count - 2
+    let mutable fullRoutes= List.empty<FullRoute>
+    for route: RouteFromTo in routes do
+        fullRoutes <- [new FullRoute(route.From,route.To,route.distance)] |>  List.append fullRoutes
+        fullRoutes <- [new FullRoute(route.To,route.From,route.distance)] |>  List.append fullRoutes
+    while count>0 do
+        count <- count - 1
+        let iterationRoutes=[
+            for fr in fullRoutes do
+                for r in routes do
+                    if ( String.Equals(fr.Cities.Item(fr.Cities.Length - 1), r.From)) && (not(cityExist fr.Cities r.To))then new FullRoute( [ r.To ] |> List.append fr.Cities, fr.TotalDistance + r.distance )
+        ]
+        let inverseIterationRoutes = [
+            for fr in fullRoutes do
+                for r in routes do
+                    if ( String.Equals(fr.Cities.Item(fr.Cities.Length - 1), r.To)) && (not(cityExist fr.Cities r.From))then new FullRoute( [ r.From ] |> List.append fr.Cities, fr.TotalDistance + r.distance )
+        ]
+        fullRoutes <- iterationRoutes |> List.append inverseIterationRoutes
+    let min= List.min (fullRoutes |> List.map (fun r -> r.TotalDistance))
+    Console.WriteLine(min)
+
+let day9_2 ()= 
+    let input= readInput(9,"game")
+    let routes= seq {for line in input -> new RouteFromTo(line.Split(" ")[0],line.Split(" ")[2],line.Split(" ")[4] |> int)}
+    let cityExist cityList city = List.exists (fun x -> x = city) cityList
+    let printRoute (cityList: string list) = cityList |> FSharp.Core.String.concat "-"
+    let mutable count=1;
+    let mutable lines=input.Length
+    while lines>0 do
+        lines <- lines - count
+        count <- count + 1
+    count <- count - 2
+    let mutable fullRoutes= List.empty<FullRoute>
+    for route: RouteFromTo in routes do
+        fullRoutes <- [new FullRoute(route.From,route.To,route.distance)] |>  List.append fullRoutes
+        fullRoutes <- [new FullRoute(route.To,route.From,route.distance)] |>  List.append fullRoutes
+    while count>0 do
+        count <- count - 1
+        let iterationRoutes=[
+            for fr in fullRoutes do
+                for r in routes do
+                    if ( String.Equals(fr.Cities.Item(fr.Cities.Length - 1), r.From)) && (not(cityExist fr.Cities r.To))then new FullRoute( [ r.To ] |> List.append fr.Cities, fr.TotalDistance + r.distance )
+        ]
+        let inverseIterationRoutes = [
+            for fr in fullRoutes do
+                for r in routes do
+                    if ( String.Equals(fr.Cities.Item(fr.Cities.Length - 1), r.To)) && (not(cityExist fr.Cities r.From))then new FullRoute( [ r.From ] |> List.append fr.Cities, fr.TotalDistance + r.distance )
+        ]
+        fullRoutes <- iterationRoutes |> List.append inverseIterationRoutes
+    let max= List.max (fullRoutes |> List.map (fun r -> r.TotalDistance))
+    Console.WriteLine(max)
+
 match input with
     | "1_1" -> day1_1()
     | "1_2" -> day1_2()
@@ -372,6 +450,8 @@ match input with
     | "7_2" -> day7_2()
     | "8_1" -> day8_1()
     | "8_2" -> day8_2()
+    | "9_1" -> day9_1()
+    | "9_2" -> day9_2()
     | _ -> printfn "Wrong Input"
 
 Console.ReadKey() |> ignore
