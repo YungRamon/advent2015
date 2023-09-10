@@ -4,7 +4,7 @@ open System.IO
 open System.Security.Cryptography
 open System.Text
 open System.Collections.Generic
-printf "Day(1_1,1_2,2_1,2_2,3_1,3_2,4_1,4_2,5_1,5_2,6_1,6_2,7_1,7_2,8_1,8_2,9_1,9_2): "
+printf "Day(1_1,1_2,2_1,2_2,3_1,3_2,4_1,4_2,5_1,5_2,6_1,6_2,7_1,7_2,8_1,8_2,9_1,9_2,10_1,10_2): "
 let input = Console.ReadLine()
 
 let readInput(day:int32,env:string) : string[]= File.ReadAllLines("../../../input/day"+day.ToString()+"-"+env+".txt")
@@ -433,6 +433,21 @@ let day9_2 ()=
     let max= List.max (fullRoutes |> List.map (fun r -> r.TotalDistance))
     Console.WriteLine(max)
 
+let day10 (iterations)=
+    let input= readInput(10,"game")
+    let mutable line=input[0];
+    let mutable i = iterations
+    while i > 0 do
+        let rx = new RegularExpressions.Regex(@"(\d)\1*",RegularExpressions.RegexOptions.Compiled)
+        let matches= rx.Matches line
+        let stringSequence = seq {
+            for matcher in matches do
+                yield (string matcher.Value.Length + matcher.Value.[0].ToString())
+        }
+        line <- String.Concat stringSequence
+        i <- i - 1
+    Console.WriteLine line.Length
+
 match input with
     | "1_1" -> day1_1()
     | "1_2" -> day1_2()
@@ -452,6 +467,8 @@ match input with
     | "8_2" -> day8_2()
     | "9_1" -> day9_1()
     | "9_2" -> day9_2()
+    | "10_1" -> day10(40)
+    | "10_2" -> day10(50)
     | _ -> printfn "Wrong Input"
 
 Console.ReadKey() |> ignore
