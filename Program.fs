@@ -4,7 +4,8 @@ open System.IO
 open System.Security.Cryptography
 open System.Text
 open System.Collections.Generic
-printf "Day(1_1,1_2,2_1,2_2,3_1,3_2,4_1,4_2,5_1,5_2,6_1,6_2,7_1,7_2,8_1,8_2,9_1,9_2,10_1,10_2,11_1,11_2): "
+
+printf "Day(1_1,1_2,2_1,2_2,3_1,3_2,4_1,4_2,5_1,5_2,6_1,6_2,7_1,7_2,8_1,8_2,9_1,9_2,10_1,10_2,11_1,11_2,12_1,12_2): "
 let input = Console.ReadLine()
 
 let readInput(day:int32,env:string) : string[]= File.ReadAllLines("../../../input/day"+day.ToString()+"-"+env+".txt")
@@ -470,6 +471,93 @@ let day11(iterations)=
             line <- addOneToPass line
     Console.WriteLine line
 
+let day12_1()=
+    let input= readInput(12,"game")
+    let rxN = new RegularExpressions.Regex(@"-?\d+",RegularExpressions.RegexOptions.Compiled)
+    let seqNumeros= seq{
+        for matcher in rxN.Matches(input[0]) do
+        int matcher.Value 
+    }
+    let count= seqNumeros |> Seq.sum
+    Console.WriteLine count
+
+//Struct ValueJSON to define each value in array
+type ValueJSON=
+    struct
+        val lvl: int
+        val obj: bool
+        val content: int
+        val id: string
+        val red: bool
+        new(lvl: int,obj: bool,content: int,id: string, red: bool) = {lvl=lvl; obj=obj; content=content; id=id; red=red}
+    end
+let day12_2()=
+    let input= readInput(12,"game")
+    let mutable inputPrep=RegularExpressions.Regex.Replace(RegularExpressions.Regex.Replace(input[0], @":""red""", ":n"), @""".*?""", "0")
+    let mutable values: ValueJSON list = []
+    let mutable lvl = 0
+    let mutable obj = false 
+    let mutable id=0
+    let mutable idCount=0
+    let mutable prevIDs: int list=[0]
+    let mutable prevobjs: bool list=[false]
+    while inputPrep.Length > 0 do
+        match inputPrep[0] with
+            | '{' -> 
+                lvl <- lvl + 1
+                prevobjs <- [obj] |> List.append prevobjs
+                obj<-true
+                prevIDs <- [id] |> List.append prevIDs
+                idCount <- idCount + 1
+                id <- idCount
+                inputPrep <- inputPrep.Substring 1
+            | '}' ->
+                lvl <- lvl - 1
+                obj <- prevobjs |> List.last
+                prevobjs <- prevobjs[..(prevobjs.Length - 2)]
+                id <- prevIDs |> List.last
+                prevIDs <- prevIDs[..(prevIDs.Length - 2)]
+                inputPrep <- inputPrep.Substring 1
+            | '[' ->
+                lvl <- lvl + 1
+                prevobjs <- [obj] |> List.append prevobjs
+                obj<-false
+                inputPrep <- inputPrep.Substring 1
+                prevIDs <- [id] |> List.append prevIDs
+                idCount <- idCount + 1
+                id <- idCount
+            | ']' ->
+                lvl <- lvl - 1
+                obj <- prevobjs |> List.last
+                prevobjs <- prevobjs[..(prevobjs.Length - 2)]
+                id <- prevIDs |> List.last
+                prevIDs <- prevIDs[..(prevIDs.Length - 2)]
+                inputPrep <- inputPrep.Substring 1
+            | ',' -> inputPrep <- inputPrep.Substring 1
+            | _ ->
+                if obj then
+                    inputPrep <- inputPrep.Substring(1 + (inputPrep.IndexOf ':'))
+                    if inputPrep[0] <> '{' && inputPrep[0] <> '[' then
+                        let matcher = RegularExpressions.Regex.Match (inputPrep, @"((-?[0-9]+)|n)")
+                        let content = if matcher.Value = "n" then 0 else  (matcher.Value |> int)
+                        inputPrep <- inputPrep.Substring(matcher.Value.Length)
+                        let idJSON = String.Join ("-", (prevIDs |> List.map(fun id -> id |> string))) + "-" + (id |> string)
+                        values <- [new ValueJSON(lvl,obj,content,idJSON,(matcher.Value = "n"))] |> List.append values
+                else 
+                    let matcher = RegularExpressions.Regex.Match (inputPrep, @"-?[0-9]+")
+                    let content = matcher.Value |> int
+                    inputPrep <- inputPrep.Substring(matcher.Value.Length)
+                    let idJSON = String.Join ("-", (prevIDs |> List.map(fun id -> id |> string))) + "-" + (id |> string)
+                    values <- [new ValueJSON(lvl,obj,content,idJSON,false)] |> List.append values
+    let redList= values |> List.filter ( fun v -> v.red)
+    for valueRed in redList do
+        values <- values |> List.filter (fun n -> not(n.id.StartsWith(valueRed.id)))
+    let sum = values |> List.fold( fun total n -> total + n.content) 0
+    Console.WriteLine sum
+
+
+
+
 match input with
     | "1_1" -> day1_1()
     | "1_2" -> day1_2()
@@ -493,6 +581,8 @@ match input with
     | "10_2" -> day10(50)
     | "11_1" -> day11(1)
     | "11_2" -> day11(2)
+    | "12_1" -> day12_1()
+    | "12_2" -> day12_2()
     | _ -> printfn "Wrong Input"
 
 Console.ReadKey() |> ignore
