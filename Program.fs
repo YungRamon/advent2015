@@ -5,11 +5,10 @@ open System.Security.Cryptography
 open System.Text
 open System.Collections.Generic
 
-printf "Day(1_1,1_2,2_1,2_2,3_1,3_2,4_1,4_2,5_1,5_2,6_1,6_2,7_1,7_2,8_1,8_2,9_1,9_2,10_1,10_2,11_1,11_2,12_1,12_2): "
+printf "Day(1_1,1_2,2_1,2_2,3_1,3_2,4_1,4_2,5_1,5_2,6_1,6_2,7_1,7_2,8_1,8_2,9_1,9_2,10_1,10_2,11_1,11_2,12_1,12_2,13_1,13_2): "
 let input = Console.ReadLine()
 
 let readInput(day:int32,env:string) : string[]= File.ReadAllLines("../../../input/day"+day.ToString()+"-"+env+".txt")
-
 let day1_1 ()= 
     let input=readInput(1,"game")
     let count= (input[0] |> Seq.filter (fun xs -> xs='(') |> Seq.length) - (input[0] |> Seq.filter (fun xs -> xs =')') |> Seq.length)
@@ -555,8 +554,76 @@ let day12_2()=
     let sum = values |> List.fold( fun total n -> total + n.content) 0
     Console.WriteLine sum
 
+//Struct Relationship respresnts points gained or lost from certain relationship
+type Relationship=
+    struct
+        val person: String
+        val price: int32
+        val relation: String
 
+        new (person: String, price: int32, relation: String) = { person = person; price = price; relation = relation}
+    end
+let day13_1()= 
+    let lines = readInput(13,"game")
+    let prepLines= [ for line in lines do line.Substring(0,line.Length - 1).Split(" ") ]
+    let peeps = prepLines |> List.map (fun line -> line[0]) |> List.distinct
+    let rels = prepLines |> List.map (fun line -> new Relationship(line[0],(if line[2]="lose" then (- (line[3] |> int32) ) else (line[3] |> int32)),line[10]))
+    let rec lister ( list: string list ) = 
+        if list.Length = 1 then seq{[list[0]]}
+        else
+            seq {
+                for i = 0 to list.Length - 1 do
+                    for ls in ((list[..i-1] @ list[i+1..]) |> lister) do
+                        [list[i]] @ ls
+            }
+    let orders = lister peeps
+    let mutable max = 0 
+    for order in orders do 
+        let relationships = seq{
+            if order.Length > 1 then
+                yield rels |> List.find ( fun rel -> rel.person = order[0] && rel.relation=order[order.Length - 1])
+                yield rels |> List.find ( fun rel -> rel.person = order[0] && rel.relation=order[1])
+                yield rels |> List.find ( fun rel -> rel.person = order[order.Length - 1] && rel.relation=order[order.Length - 2])
+                yield rels |> List.find ( fun rel -> rel.person = order[order.Length - 1] && rel.relation=order[0])
+                if order.Length - 2 > 1 then
+                    for i = 1 to order.Length - 2 do
+                        yield rels |> List.find ( fun rel -> rel.person = order[i] && rel.relation=order[i - 1])
+                        yield rels |> List.find ( fun rel -> rel.person = order[i] && rel.relation=order[i + 1])
+        }
+        let sum = relationships |> Seq.fold (fun acc rel -> acc + rel.price) 0
+        if sum > max then max <- sum
+    Console.WriteLine max
 
+let day13_2()= 
+    let lines = readInput(13,"game")
+    let prepLines= [ for line in lines do line.Substring(0,line.Length - 1).Split(" ") ]
+    let peeps = (prepLines |> List.map (fun line -> line[0]) |> List.distinct) @ ["Me"]
+    let rels = (prepLines |> List.map (fun line -> new Relationship(line[0],(if line[2]="lose" then (- (line[3] |> int32) ) else (line[3] |> int32)),line[10]))) @ (peeps |> List.fold(fun acc peep -> acc @ [new Relationship("Me",0,peep);new Relationship(peep,0,"Me")]) ([new Relationship("Me",0,"Me")]))
+    let rec lister ( list: string list ) = 
+        if list.Length = 1 then seq{[list[0]]}
+        else
+            seq {
+                for i = 0 to list.Length - 1 do
+                    for ls in ((list[..i-1] @ list[i+1..]) |> lister) do
+                        [list[i]] @ ls
+            }
+    let orders = lister peeps
+    let mutable max = 0 
+    for order in orders do 
+        let relationships = seq{
+            if order.Length > 1 then
+                yield rels |> List.find ( fun rel -> rel.person = order[0] && rel.relation=order[order.Length - 1])
+                yield rels |> List.find ( fun rel -> rel.person = order[0] && rel.relation=order[1])
+                yield rels |> List.find ( fun rel -> rel.person = order[order.Length - 1] && rel.relation=order[order.Length - 2])
+                yield rels |> List.find ( fun rel -> rel.person = order[order.Length - 1] && rel.relation=order[0])
+                if order.Length - 2 > 1 then
+                    for i = 1 to order.Length - 2 do
+                        yield rels |> List.find ( fun rel -> rel.person = order[i] && rel.relation=order[i - 1])
+                        yield rels |> List.find ( fun rel -> rel.person = order[i] && rel.relation=order[i + 1])
+        }
+        let sum = relationships |> Seq.fold (fun acc rel -> acc + rel.price) 0
+        if sum > max then max <- sum
+    Console.WriteLine max
 
 match input with
     | "1_1" -> day1_1()
@@ -583,6 +650,8 @@ match input with
     | "11_2" -> day11(2)
     | "12_1" -> day12_1()
     | "12_2" -> day12_2()
+    | "13_1" -> day13_1()
+    | "13_2" -> day13_2()
     | _ -> printfn "Wrong Input"
 
 Console.ReadKey() |> ignore
