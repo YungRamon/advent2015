@@ -5,7 +5,7 @@ open System.Security.Cryptography
 open System.Text
 open System.Collections.Generic
 
-printf "Day(1_1,1_2,2_1,2_2,3_1,3_2,4_1,4_2,5_1,5_2,6_1,6_2,7_1,7_2,8_1,8_2,9_1,9_2,10_1,10_2,11_1,11_2,12_1,12_2,13_1,13_2,14_1,14_2,15_1,15_2,16_1,16_2): "
+printf "Day(1_1,1_2,2_1,2_2,3_1,3_2,4_1,4_2,5_1,5_2,6_1,6_2,7_1,7_2,8_1,8_2,9_1,9_2,10_1,10_2,11_1,11_2,12_1,12_2,13_1,13_2,14_1,14_2,15_1,15_2,16_1,16_2,17_1,17_2): "
 let input = Console.ReadLine()
 
 let readInput(day:int32,env:string) : string[]= File.ReadAllLines("../../../input/day"+day.ToString()+"-"+env+".txt")
@@ -840,6 +840,39 @@ let day16_2()=
         if rightSue then
             Console.WriteLine sue
 
+let day17_1()=
+    let input = readInput(17,"game")
+    let total= input[0].Split("=")[1] |> int
+    let rec contCombinations(prevCont:int,list:int array,sum: int)=
+        let mutable cont = prevCont
+        for i = 0 to list.Length - 1 do
+            let n = sum + list[i]
+            if n = total then
+                cont <- cont + 1
+            else if n < total && not(i = list.Length - 1) && (list |> Array.last) + n  <= total then
+                cont <- contCombinations(cont,list[i+1..],n)
+        cont
+    let list = input[1..] |> Array.map (fun i -> i |> int ) |> Array.sortDescending
+    let n = contCombinations(0,list,0)
+    Console.WriteLine n
+
+let day17_2()=
+    let input = readInput(17,"game")
+    let total= input[0].Split("=")[1] |> int
+    let rec contCombinations(prevCont:int array,list:int array,sum: int,level: int)=
+        let mutable cont = prevCont
+        for i = 0 to list.Length - 1 do
+            let n = sum + list[i]
+            if n = total then
+                cont <- [|level|] |> Array.append cont
+            else if n < total && not(i = list.Length - 1) && (list |> Array.last) + n  <= total then
+                cont <- contCombinations(cont,list[i+1..],n,level + 1)
+        cont
+    let list = input[1..] |> Array.map (fun i -> i |> int ) |> Array.sortDescending
+    let n = contCombinations([||],list,0,0)
+    let min = n |> Array.min
+    let count = n |> Array.filter (fun x -> x = min) |> Array.length
+    Console.WriteLine count
 
 match input with
     | "1_1" -> day1_1()
@@ -874,6 +907,8 @@ match input with
     | "15_2" -> day15_2()
     | "16_1" -> day16_1()
     | "16_2" -> day16_2()
+    | "17_1" -> day17_1()
+    | "17_2" -> day17_2()
     | _ -> printfn "Wrong Input"
 
 Console.ReadKey() |> ignore
