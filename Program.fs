@@ -5,7 +5,7 @@ open System.Security.Cryptography
 open System.Text
 open System.Collections.Generic
 
-printf "Day(1_1,1_2,2_1,2_2,3_1,3_2,4_1,4_2,5_1,5_2,6_1,6_2,7_1,7_2,8_1,8_2,9_1,9_2,10_1,10_2,11_1,11_2,12_1,12_2,13_1,13_2,14_1,14_2): "
+printf "Day(1_1,1_2,2_1,2_2,3_1,3_2,4_1,4_2,5_1,5_2,6_1,6_2,7_1,7_2,8_1,8_2,9_1,9_2,10_1,10_2,11_1,11_2,12_1,12_2,13_1,13_2,14_1,14_2,15_1,15_2): "
 let input = Console.ReadLine()
 
 let readInput(day:int32,env:string) : string[]= File.ReadAllLines("../../../input/day"+day.ToString()+"-"+env+".txt")
@@ -695,6 +695,95 @@ let day14_2()=
     let winner = deers |> List.maxBy(fun deer -> deer.points)
     Console.WriteLine(String.Concat [winner.name; " -> "; winner.points.ToString()])
 
+type Ingredient=
+    struct
+        val capacity: int
+        val durability: int
+        val flavor: int
+        val texture: int
+        val calories: int
+        new (capacity,durability,flavor,texture,calories) = {capacity = capacity; durability = durability; flavor = flavor; texture = texture; calories = calories}
+    end
+let day15_1()=
+    let input = readInput(15,"game");
+    let coma = [|","[0]|]
+    let rec checkIngredients(length: int,i: int) = 
+        if length = 1 then
+            let f = 100 - i
+            [[f]]
+        else
+            let m = 101 - i - length
+            [
+                for f = 1 to m do
+                    let lists = checkIngredients(length - 1,i+f)
+                    for l in lists do
+                        yield l |> List.append [ f ]
+            ]
+    let trimComa(str: String) = str.TrimEnd(coma)
+    let ingredients= [
+        for line in input do
+            let split = line.Split(" ")
+            let capacity = trimComa(split[2]) |> int
+            let durability = trimComa(split[4]) |> int
+            let flavor = trimComa(split[6]) |> int
+            let texture = trimComa(split[8]) |> int
+            let calories = split[10] |> int
+            new Ingredient(capacity,durability,flavor,texture,calories)
+    ]
+    let combinations = checkIngredients(ingredients.Length, 0)
+    let mutable max= 0;
+    for combination in combinations do
+        let capacity = List.fold2(fun acc n (i: Ingredient) -> acc + (n * i.capacity) ) 0 combination ingredients
+        let durability = List.fold2(fun acc n (i: Ingredient) -> acc + (n * i.durability) ) 0 combination ingredients
+        let flavor = List.fold2(fun acc n (i: Ingredient) -> acc + (n * i.flavor) ) 0 combination ingredients
+        let texture = List.fold2(fun acc n (i: Ingredient) -> acc + (n * i.texture) ) 0 combination ingredients
+        if capacity > 0 && durability > 0 && flavor > 0 && texture > 0 then 
+            let total = capacity * durability * flavor * texture
+            if total > max then 
+                max <- total
+    Console.WriteLine max
+
+let day15_2()=
+    let input = readInput(15,"game");
+    let coma = [|","[0]|]
+    let rec checkIngredients(length: int,i: int) = 
+        if length = 1 then
+            let f = 100 - i
+            [[f]]
+        else
+            let m = 101 - i - length
+            [
+                for f = 1 to m do
+                    let lists = checkIngredients(length - 1,i+f)
+                    for l in lists do
+                        yield l |> List.append [ f ]
+            ]
+    let trimComa(str: String) = str.TrimEnd(coma)
+    let ingredients= [
+        for line in input do
+            let split = line.Split(" ")
+            let capacity = trimComa(split[2]) |> int
+            let durability = trimComa(split[4]) |> int
+            let flavor = trimComa(split[6]) |> int
+            let texture = trimComa(split[8]) |> int
+            let calories = split[10] |> int
+            new Ingredient(capacity,durability,flavor,texture,calories)
+    ]
+    let combinations = checkIngredients(ingredients.Length, 0)
+    let mutable max= 0;
+    for combination in combinations do
+        let capacity = List.fold2(fun acc n (i: Ingredient) -> acc + (n * i.capacity) ) 0 combination ingredients
+        let durability = List.fold2(fun acc n (i: Ingredient) -> acc + (n * i.durability) ) 0 combination ingredients
+        let flavor = List.fold2(fun acc n (i: Ingredient) -> acc + (n * i.flavor) ) 0 combination ingredients
+        let texture = List.fold2(fun acc n (i: Ingredient) -> acc + (n * i.texture) ) 0 combination ingredients
+        let calories = List.fold2(fun acc n (i: Ingredient) -> acc + (n * i.calories) ) 0 combination ingredients
+        if calories = 500 && capacity > 0 && durability > 0 && flavor > 0 && texture > 0 then 
+            let total = capacity * durability * flavor * texture
+            if total > max then 
+                max <- total
+    Console.WriteLine max
+
+
 match input with
     | "1_1" -> day1_1()
     | "1_2" -> day1_2()
@@ -724,6 +813,8 @@ match input with
     | "13_2" -> day13_2()
     | "14_1" -> day14_1()
     | "14_2" -> day14_2()
+    | "15_1" -> day15_1()
+    | "15_2" -> day15_2()
     | _ -> printfn "Wrong Input"
 
 Console.ReadKey() |> ignore
