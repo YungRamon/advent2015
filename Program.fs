@@ -5,7 +5,7 @@ open System.Security.Cryptography
 open System.Text
 open System.Collections.Generic
 
-printf "Day(1_1,1_2,2_1,2_2,3_1,3_2,4_1,4_2,5_1,5_2,6_1,6_2,7_1,7_2,8_1,8_2,9_1,9_2,10_1,10_2,11_1,11_2,12_1,12_2,13_1,13_2): "
+printf "Day(1_1,1_2,2_1,2_2,3_1,3_2,4_1,4_2,5_1,5_2,6_1,6_2,7_1,7_2,8_1,8_2,9_1,9_2,10_1,10_2,11_1,11_2,12_1,12_2,13_1,13_2,14_1,14_2): "
 let input = Console.ReadLine()
 
 let readInput(day:int32,env:string) : string[]= File.ReadAllLines("../../../input/day"+day.ToString()+"-"+env+".txt")
@@ -625,6 +625,76 @@ let day13_2()=
         if sum > max then max <- sum
     Console.WriteLine max
 
+let day14_1()=
+    let lines = readInput(14,"game")
+    let limit =lines[0].Split("=")[1] |> int
+    let deerLines= lines[1..]
+    let mutable max= 0;
+    let mutable winner= "Winner"
+    for deerLine in deerLines do
+        let deer=deerLine.Split(" ")
+        let name=deer[0]
+        let speed=deer[3] |> int
+        let period = deer[6] |> int
+        let rest=deer[13] |> int
+        let fullPeriod= period + rest
+        let fullCicles= limit / fullPeriod
+        let left = limit % fullPeriod
+        let distance=speed * (fullCicles * period + Math.Min(period, left))
+        if distance > max then
+            max <- distance
+            winner <- name
+    Console.WriteLine (String.Concat [winner; " -> "; max.ToString()])
+
+type Deer=
+    struct
+        val name: String
+        val speed: int
+        val mutable time: int
+        val tRun: int
+        val tRest:int
+        val mutable isRunning: bool
+        val mutable distance: int
+        val mutable points: int
+        new(name,speed,tRun,tRest) = { name = name; speed = speed; time = tRun; tRun = tRun; tRest = tRest; isRunning = true; distance = 0; points = 0 }
+    end
+let day14_2()=
+    let lines = readInput(14,"game")
+    let limit =lines[0].Split("=")[1] |> int
+    let deerLines= lines[1..]
+    let mutable deers=[
+        for deerLine in deerLines do
+            let deer=deerLine.Split(" ")
+            let name=deer[0]
+            let speed=deer[3] |> int
+            let tRun = deer[6] |> int
+            let tRest=deer[13] |> int
+            new Deer(name,speed,tRun,tRest)
+    ]
+    for i = 0 to limit do
+        deers <- deers |> List.map (fun d ->
+            let mutable deer = d
+            deer.distance <- if deer.isRunning then deer.distance + deer.speed else deer.distance
+            deer.time <- deer.time - 1
+            if deer.time = 0 then
+                if deer.isRunning then
+                    deer.isRunning <- false
+                    deer.time <- deer.tRest
+                else
+                    deer.isRunning <- true
+                    deer.time <- deer.tRun
+            deer
+        )
+        let maxDistance = deers |> List.maxBy(fun deer -> deer.distance)
+        let distance=maxDistance.distance
+        let winners = deers |> List.filter(fun deer -> deer.distance = distance)
+        for w in winners do
+            let mutable winner = w
+            winner.points <- winner.points + 1
+            deers <- [winner] |> List.append (deers |> List.filter(fun deer -> not(deer.name.Equals(winner.name))))
+    let winner = deers |> List.maxBy(fun deer -> deer.points)
+    Console.WriteLine(String.Concat [winner.name; " -> "; winner.points.ToString()])
+
 match input with
     | "1_1" -> day1_1()
     | "1_2" -> day1_2()
@@ -652,6 +722,8 @@ match input with
     | "12_2" -> day12_2()
     | "13_1" -> day13_1()
     | "13_2" -> day13_2()
+    | "14_1" -> day14_1()
+    | "14_2" -> day14_2()
     | _ -> printfn "Wrong Input"
 
 Console.ReadKey() |> ignore
