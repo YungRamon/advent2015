@@ -5,7 +5,7 @@ open System.Security.Cryptography
 open System.Text
 open System.Collections.Generic
 
-printf "Day(1_1,1_2,2_1,2_2,3_1,3_2,4_1,4_2,5_1,5_2,6_1,6_2,7_1,7_2,8_1,8_2,9_1,9_2,10_1,10_2,11_1,11_2,12_1,12_2,13_1,13_2,14_1,14_2,15_1,15_2,16_1,16_2,17_1,17_2): "
+printf "Day(1_1,1_2,2_1,2_2,3_1,3_2,4_1,4_2,5_1,5_2,6_1,6_2,7_1,7_2,8_1,8_2,9_1,9_2,10_1,10_2,11_1,11_2,12_1,12_2,13_1,13_2,14_1,14_2,15_1,15_2,16_1,16_2,17_1,17_2,18_1,18_2): "
 let input = Console.ReadLine()
 
 let readInput(day:int32,env:string) : string[]= File.ReadAllLines("../../../input/day"+day.ToString()+"-"+env+".txt")
@@ -856,6 +856,7 @@ let day17_1()=
     let n = contCombinations(0,list,0)
     Console.WriteLine n
 
+
 let day17_2()=
     let input = readInput(17,"game")
     let total= input[0].Split("=")[1] |> int
@@ -873,6 +874,86 @@ let day17_2()=
     let min = n |> Array.min
     let count = n |> Array.filter (fun x -> x = min) |> Array.length
     Console.WriteLine count
+
+let day18_1()=
+    let input = readInput(18,"game")
+    let f = input[0].Split("=")[1] |> int
+    let gridInput=input[1..]
+    let mutable grid=[|
+        for row in gridInput do
+            [|
+                let chars = row.ToCharArray()
+                for ch in chars do
+                    ch = '#'
+            |]
+    |]
+    let scale= grid.Length - 1
+    for i = 1 to f do
+        grid <- [|
+            for row = 0 to scale do
+            [|
+                for col = 0 to scale do
+                    let mutable cont = 0
+                    if not(row=0) then
+                        if not(col = 0 ) && grid[row - 1][col - 1] then cont <- cont + 1
+                        if grid[row - 1][col] then cont <- cont + 1
+                        if not(col = scale ) && grid[row - 1][col + 1] then cont <- cont + 1
+                    if not(row = scale ) then 
+                        if not(col = 0 ) && grid[row + 1][col - 1] then cont <- cont + 1
+                        if grid[row + 1][col] then cont <- cont + 1
+                        if not(col = scale ) && grid[row + 1][col + 1] then cont <- cont + 1
+                    if not(col = 0) && grid[row][col - 1] then cont <- cont + 1
+                    if not(col = scale ) && grid[row][col + 1] then cont <- cont + 1
+                    (grid[row][col] && (cont = 2 ||cont = 3 )) || (not(grid[row][col]) && cont = 3)
+            |]
+        |]
+    let cont = grid|> Array.fold ( fun acc i -> i |> Array.fold (fun acc2 b -> if b then acc2 + 1 else acc2) acc) 0
+    Console.WriteLine cont
+
+
+let day18_2()=
+    let input = readInput(18,"game")
+    let f = input[0].Split("=")[1] |> int
+    let gridInput=input[1..]
+    let mutable grid=[|
+        for row in gridInput do
+            [|
+                let chars = row.ToCharArray()
+                for ch in chars do
+                    ch = '#'
+            |]
+    |]
+    let scale= grid.Length - 1
+    grid[0][0] <- true
+    grid[0][scale] <- true
+    grid[scale][0] <- true
+    grid[scale][scale] <- true
+    for i = 1 to f do
+        grid <- [|
+            for row = 0 to scale do
+            [|
+                for col = 0 to scale do
+                    let mutable cont = 0
+                    if not(row=0) then
+                        if not(col = 0 ) && grid[row - 1][col - 1] then cont <- cont + 1
+                        if grid[row - 1][col] then cont <- cont + 1
+                        if not(col = scale ) && grid[row - 1][col + 1] then cont <- cont + 1
+                    if not(row = scale ) then 
+                        if not(col = 0 ) && grid[row + 1][col - 1] then cont <- cont + 1
+                        if grid[row + 1][col] then cont <- cont + 1
+                        if not(col = scale ) && grid[row + 1][col + 1] then cont <- cont + 1
+                    if not(col = 0) && grid[row][col - 1] then cont <- cont + 1
+                    if not(col = scale ) && grid[row][col + 1] then cont <- cont + 1
+                    (grid[row][col] && (cont = 2 ||cont = 3 )) || (not(grid[row][col]) && cont = 3)
+            |]
+        |]
+        grid[0][0] <- true
+        grid[0][scale] <- true
+        grid[scale][0] <- true
+        grid[scale][scale] <- true
+    let cont = grid|> Array.fold ( fun acc i -> i |> Array.fold (fun acc2 b -> if b then acc2 + 1 else acc2) acc) 0
+    Console.WriteLine cont
+
 
 match input with
     | "1_1" -> day1_1()
@@ -909,6 +990,8 @@ match input with
     | "16_2" -> day16_2()
     | "17_1" -> day17_1()
     | "17_2" -> day17_2()
+    | "18_1" -> day18_1()
+    | "18_2" -> day18_2()
     | _ -> printfn "Wrong Input"
 
 Console.ReadKey() |> ignore
